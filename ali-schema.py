@@ -10,6 +10,8 @@ from gi.repository import Gio
 import sys
 import urllib2
 import json
+import time
+import datetime
 
 class ALISchemaWindow(Gtk.ApplicationWindow):
 
@@ -27,7 +29,7 @@ class ALISchemaWindow(Gtk.ApplicationWindow):
     def __init__(self, app):
         Gtk.Window.__init__(self, title="ALI-Schema", application=app)
 
-        self.week = "42"
+        self.week = str(datetime.date(int(time.strftime("%Y")), int(time.strftime("%m")), int(time.strftime("%d"))).isocalendar()   [1])
 
         self.header = Gtk.HeaderBar()
         self.header.set_show_close_button(True)
