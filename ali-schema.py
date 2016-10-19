@@ -29,16 +29,18 @@ class ALISchemaWindow(Gtk.ApplicationWindow):
     def __init__(self, app):
         Gtk.Window.__init__(self, title="ALI-Schema", application=app)
 
-        self.week = str(datetime.date(int(time.strftime("%Y")), int(time.strftime("%m")), int(time.strftime("%d"))).isocalendar()   [1])
+        self.week = str(datetime.datetime.today().isocalendar()[1])
 
         self.header = Gtk.HeaderBar()
         self.header.set_show_close_button(True)
         self.header.props.title = "ALI-Schema"
         self.set_titlebar(self.header)
 
-        self.week_button = Gtk.Button("42")
+        self.week_button = Gtk.Button("v."+self.week)
         self.week_button.connect("clicked", self.show_popover)
         self.header.pack_start(self.week_button)
+
+        grid = Gtk.Grid()
 
         self.week_adjustment = Gtk.Adjustment(int(self.week), 1, 52, 1, 10, 0)
         self.week_adjustment.connect("value-changed", self.update_view)
@@ -48,15 +50,25 @@ class ALISchemaWindow(Gtk.ApplicationWindow):
         self.week_picker.set_range(1, 52)
         self.week_picker.set_value(int(self.week))
 
+        label = Gtk.Label("Vecka")
+        label.set_xalign(0  )
+
+        grid.set_column_homogeneous(True)
+        grid.attach(label, 0, 0, 1, 1)
+        grid.attach(self.week_picker, 1, 0, 1, 1)
+
         self.week_popover = Gtk.Popover()
         self.week_popover.set_position(Gtk.PositionType.BOTTOM)
         self.week_popover.set_relative_to(self.week_button)
-        self.week_popover.add(self.week_picker)
+        self.week_popover.set_border_width(5)
+        self.week_popover.add(grid)
 
         self.notebook = Gtk.Notebook()
         self.add(self.notebook)
 
     def reload(self):
+
+        self.week_button.set_label("v."+self.week)
 
         days = ["Måndag", "Tisdag", "Onsdag", "Torsdag", "Fredag"]
 
@@ -76,6 +88,8 @@ class ALISchemaWindow(Gtk.ApplicationWindow):
 
             self.notebook.insert_page(list, Gtk.Label(days[i]), i)
 
+        self.notebook.set_current_page(datetime.datetime.today().weekday())
+
         self.show_all()
 
 class ALISchemaApplication(Gtk.Application):
@@ -85,6 +99,7 @@ class ALISchemaApplication(Gtk.Application):
 
     def do_activate(self):
         win = ALISchemaWindow(self)
+        win.set_resizable(False)
         win.show_all()
 
         win.reload()
