@@ -13,6 +13,37 @@ import json
 import time
 import datetime
 
+class ALISchemaSettingsWindow(Gtk.ApplicationWindow):
+
+    def __init__(self, app):
+        Gtk.Window.__init__(self, title="Inställningar", application=app)
+
+        self.set_resizable(False)
+        self.set_border_width(10)
+
+        grid = Gtk.Grid()
+
+        skola_label = Gtk.Label("Skola")
+        skola_label.set_xalign(0)
+
+        skola = Gtk.ComboBox()
+
+        klass_label = Gtk.Label("Klass, Personnummer, id...")
+        klass_label.set_xalign(0)
+
+        klass = Gtk.Entry()
+
+        grid.set_column_homogeneous(True)
+        grid.set_column_spacing(5)
+        grid.set_row_spacing(5)
+
+        grid.attach(skola_label, 0, 0, 1, 1)
+        grid.attach(skola, 1, 0, 1, 1)
+        grid.attach(klass_label, 0, 1, 1, 1)
+        grid.attach(klass, 1, 1, 1, 1)
+
+        self.add(grid)
+
 class ALISchemaWindow(Gtk.ApplicationWindow):
 
     def show_popover(self, button):
@@ -108,7 +139,8 @@ class ALISchemaApplication(Gtk.Application):
         self.quit()
 
     def show_settings(self, action, param):
-        print("test")
+        settings_window = ALISchemaSettingsWindow(self)
+        settings_window.show_all()
 
     def do_startup(self):
         Gtk.Application.do_startup(self)
