@@ -56,18 +56,13 @@ class ALISchemaWindow(Gtk.ApplicationWindow):
 
     def reload(self):
 
-        try:
-            if self.notebook.get_n_pages() == 5:
-                for i in range(5):
-                    self.notebook.remove_page(i)
-        except NameError:
-            print("Not defined")
-
         days = ["Måndag", "Tisdag", "Onsdag", "Torsdag", "Fredag"]
 
         weeks = json.loads(urllib2.urlopen("http://jobb.matstoms.se/ali/api/getjson.php?week="+self.week+"&scid=89920&clid=na15c&getweek=1").read())
 
         for i in range(5):
+
+            self.notebook.remove_page(i)
 
             list = Gtk.ListBox()
             list.set_selection_mode(Gtk.SelectionMode.NONE)
@@ -77,7 +72,7 @@ class ALISchemaWindow(Gtk.ApplicationWindow):
                 info.set_xalign(0)
                 list.add(info)
 
-            self.notebook.append_page(list, Gtk.Label(days[i]))
+            self.notebook.insert_page(list, Gtk.Label(days[i]), i)
 
         self.show_all()
 
