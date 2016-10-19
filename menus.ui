@@ -3,7 +3,7 @@
         <section></section>
         <section>
             <item>
-                <attribute name="action">app.vecka</attribute>
+                <attribute name="action">app.settings</attribute>
                 <attribute name="label" translatable="no">Inställningar</attribute>
             </item>
         </section>
