@@ -1,0 +1,18 @@
+<interface>
+    <menu id="app-menu">
+        <section></section>
+        <section>
+            <item>
+                <attribute name="action">app.vecka</attribute>
+                <attribute name="label" translatable="no">Inställningar</attribute>
+            </item>
+        </section>
+        <section>
+            <item>
+                <attribute name="action">app.quit</attribute>
+                <attribute name="label" translatable="yes">_Quit</attribute>
+                <attribute name="accel">&lt;Primary&gt;q</attribute>
+            </item>
+        </section>
+    </menu>
+</interface>
