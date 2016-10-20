@@ -56,6 +56,10 @@ class ALISchemaWindow(Gtk.ApplicationWindow):
         self.week = str(self.week_picker.get_value_as_int())
         self.reload()
 
+    def reset_week(self, button):
+        self.week = str(datetime.datetime.today().isocalendar()[1])
+        self.week_picker.set_value(int(self.week))
+        self.reload()
 
     def __init__(self, app):
         Gtk.Window.__init__(self, title="ALI-Schema", application=app)
@@ -81,12 +85,18 @@ class ALISchemaWindow(Gtk.ApplicationWindow):
         self.week_picker.set_range(1, 52)
         self.week_picker.set_value(int(self.week))
 
-        label = Gtk.Label("Vecka")
-        label.set_xalign(0  )
+        self.this_week = Gtk.Button("Denna vecka")
+        self.this_week.connect("clicked", self.reset_week)
 
+        label = Gtk.Label("Vecka")
+        label.set_xalign(0)
+
+        grid.set_row_spacing(5)
         grid.set_column_homogeneous(True)
+
         grid.attach(label, 0, 0, 1, 1)
         grid.attach(self.week_picker, 1, 0, 1, 1)
+        grid.attach(self.this_week, 0, 2, 2, 2)
 
         self.week_popover = Gtk.Popover()
         self.week_popover.set_position(Gtk.PositionType.BOTTOM)
