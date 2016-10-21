@@ -26,10 +26,22 @@ class ALISchemaSettingsWindow(Gtk.ApplicationWindow):
         skola_label = Gtk.Label("Skola")
         skola_label.set_xalign(0)
 
-        skola = Gtk.ComboBox()
-
         klass_label = Gtk.Label("Klass, Personnummer, id...")
         klass_label.set_xalign(0)
+
+        school_list = json.load(open("schools.json", "r"))
+
+        school_store = Gtk.ListStore(str, str)
+
+        for school in school_list:
+            school_store.append([school["id"], school["namn"] + "("+school["stad"]+")"])
+
+        skola = Gtk.ComboBox(model=school_store)
+
+        cell = Gtk.CellRendererText()
+
+        skola.pack_start(cell, False)
+        skola.add_attribute(cell, "text", 1)
 
         klass = Gtk.Entry()
 
