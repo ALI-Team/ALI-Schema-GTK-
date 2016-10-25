@@ -73,6 +73,39 @@ class ALISchemaWindow(Gtk.ApplicationWindow):
         self.week_picker.set_value(int(self.week))
         self.reload()
 
+    def callback(self, source_object, result, user_data):
+        try:
+            success, content, etag = source_object.load_contents_finish(result)
+        except Glib.GError as e:
+            print("error: " + e.message)
+        else:
+
+            print("Recieved data for page: "+str(user_data))
+
+            days = ["Måndag", "Tisdag", "Onsdag", "Torsdag", "Fredag"]
+
+            weeks = json.loads(content.decode("utf-8"))
+
+            list = self.notebook.get_nth_page(user_data)
+
+            for container in list.get_children():
+                list.remove(container)
+
+            for lesson in weeks["lessons"]:
+                info = Gtk.Label(lesson["start"] + " - " + lesson["end"] + "\n" + lesson["info"])
+                info.set_xalign(0)
+                list.add(info)
+                self.show_all()
+
+    def day_changed(self, notebook, widget, page):
+
+        print("Notebook changed page")
+
+        self.week_button.set_label("v."+self.week)
+
+        file = Gio.File.new_for_uri("http://jobb.matstoms.se/ali/api/getjson.php?week="+self.week+"&scid=89920&clid=na15c&getweek=0&day="+str(page+1)+"")
+        file.load_contents_async(Gio.Cancellable(), self.callback, page)
+
     def __init__(self, app):
         Gtk.Window.__init__(self, title="ALI-Schema", application=app)
 
@@ -117,44 +150,21 @@ class ALISchemaWindow(Gtk.ApplicationWindow):
         self.week_popover.add(grid)
 
         self.notebook = Gtk.Notebook()
+
+        days = ["Måndag", "Tisdag", "Onsdag", "Torsdag", "Fredag"]
+
+        for i in range(5):
+             list = Gtk.ListBox()
+             list.set_selection_mode(Gtk.SelectionMode.NONE)
+             self.notebook.insert_page(list, Gtk.Label(days[i]), i)
+
+        self.notebook.connect("switch-page", self.day_changed)
+
         self.add(self.notebook)
 
     def reload(self):
 
-        self.week_button.set_label("v."+self.week)
-
-        file = Gio.File.new_for_uri("http://jobb.matstoms.se/ali/api/getjson.php?week="+self.week+"&scid=89920&clid=na15c&getweek=1")
-        file.load_contents_async(Gio.Cancellable(), self.callback, None)
-
-    def callback(self, source_object, result, user_data):
-        try:
-            success, content, etag = source_object.load_contents_finish(result)
-        except Glib.GError as e:
-            print("error: " + e.message)
-        else:
-
-            days = ["Måndag", "Tisdag", "Onsdag", "Torsdag", "Fredag"]
-
-            weeks = json.loads(content.decode("utf-8"))
-            #print(weeks)
-
-            for i in range(5):
-
-                self.notebook.remove_page(i)
-
-                list = Gtk.ListBox()
-                list.set_selection_mode(Gtk.SelectionMode.NONE)
-
-                for lesson in weeks["days"][i]["lessons"]:
-                    info = Gtk.Label(lesson["start"] + " - " + lesson["end"] + "\n" + lesson["info"])
-                    info.set_xalign(0)
-                    list.add(info)
-
-                self.notebook.insert_page(list, Gtk.Label(days[i]), i)
-
-            self.notebook.set_current_page(datetime.datetime.today().weekday())
-
-            self.show_all()
+        print("asd")
 
 
 class ALISchemaApplication(Gtk.Application):
