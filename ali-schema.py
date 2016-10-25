@@ -164,8 +164,7 @@ class ALISchemaWindow(Gtk.ApplicationWindow):
 
     def reload(self):
 
-        print("asd")
-
+        self.day_changed(self.notebook, self.notebook.get_nth_page(self.notebook.get_current_page()), self.notebook.get_current_page())
 
 class ALISchemaApplication(Gtk.Application):
 
