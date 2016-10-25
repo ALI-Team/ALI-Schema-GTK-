@@ -34,7 +34,7 @@ class ALISchemaSettingsWindow(Gtk.ApplicationWindow):
         school_store = Gtk.ListStore(str, str)
 
         for school in school_list:
-            school_store.append([school["id"], school["namn"] + "("+school["stad"]+")"])
+            school_store.append([school["id"], school["namn"] + " ("+school["stad"]+")"])
 
         skola = Gtk.ComboBox(model=school_store)
 
@@ -123,27 +123,39 @@ class ALISchemaWindow(Gtk.ApplicationWindow):
 
         self.week_button.set_label("v."+self.week)
 
-        days = ["Måndag", "Tisdag", "Onsdag", "Torsdag", "Fredag"]
+        file = Gio.File.new_for_uri("http://jobb.matstoms.se/ali/api/getjson.php?week="+self.week+"&scid=89920&clid=na15c&getweek=1")
+        file.load_contents_async(Gio.Cancellable(), self.callback, None)
 
-        weeks = json.loads(urllib2.urlopen("http://jobb.matstoms.se/ali/api/getjson.php?week="+self.week+"&scid=89920&clid=na15c&getweek=1").read())
+    def callback(self, source_object, result, user_data):
+        try:
+            success, content, etag = source_object.load_contents_finish(result)
+        except Glib.GError as e:
+            print("error: " + e.message)
+        else:
 
-        for i in range(5):
+            days = ["Måndag", "Tisdag", "Onsdag", "Torsdag", "Fredag"]
 
-            self.notebook.remove_page(i)
+            weeks = json.loads(content.decode("utf-8"))
+            #print(weeks)
 
-            list = Gtk.ListBox()
-            list.set_selection_mode(Gtk.SelectionMode.NONE)
+            for i in range(5):
 
-            for lesson in weeks["days"][i]["lessons"]:
-                info = Gtk.Label(lesson["start"] + " - " + lesson["end"] + "\n" + lesson["info"])
-                info.set_xalign(0)
-                list.add(info)
+                self.notebook.remove_page(i)
 
-            self.notebook.insert_page(list, Gtk.Label(days[i]), i)
+                list = Gtk.ListBox()
+                list.set_selection_mode(Gtk.SelectionMode.NONE)
 
-        self.notebook.set_current_page(datetime.datetime.today().weekday())
+                for lesson in weeks["days"][i]["lessons"]:
+                    info = Gtk.Label(lesson["start"] + " - " + lesson["end"] + "\n" + lesson["info"])
+                    info.set_xalign(0)
+                    list.add(info)
 
-        self.show_all()
+                self.notebook.insert_page(list, Gtk.Label(days[i]), i)
+
+            self.notebook.set_current_page(datetime.datetime.today().weekday())
+
+            self.show_all()
+
 
 class ALISchemaApplication(Gtk.Application):
 
