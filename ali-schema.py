@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-
 import gi
 gi.require_version('Gtk', '3.0')
 
@@ -12,6 +11,8 @@ import urllib2
 import json
 import time
 import datetime
+import os
+
 
 class ALISchemaSettingsWindow(Gtk.ApplicationWindow):
 
@@ -34,7 +35,8 @@ class ALISchemaSettingsWindow(Gtk.ApplicationWindow):
         school_store = Gtk.ListStore(str, str)
 
         for school in school_list:
-            school_store.append([school["id"], school["namn"] + " ("+school["stad"]+")"])
+            school_store.append(
+                [school["id"], school["namn"] + " (" + school["stad"] + ")"])
 
         skola = Gtk.ComboBox(model=school_store)
 
@@ -55,6 +57,7 @@ class ALISchemaSettingsWindow(Gtk.ApplicationWindow):
         grid.attach(klass, 1, 1, 1, 1)
 
         self.add(grid)
+
 
 class ALISchemaWindow(Gtk.ApplicationWindow):
 
@@ -80,7 +83,7 @@ class ALISchemaWindow(Gtk.ApplicationWindow):
             print("error: " + e.message)
         else:
 
-            print("Recieved data for page: "+str(user_data))
+            print("Recieved data for page: " + str(user_data))
 
             days = ["Måndag", "Tisdag", "Onsdag", "Torsdag", "Fredag"]
 
@@ -92,7 +95,8 @@ class ALISchemaWindow(Gtk.ApplicationWindow):
                 list.remove(container)
 
             for lesson in weeks["lessons"]:
-                info = Gtk.Label(lesson["start"] + " - " + lesson["end"] + "\n" + lesson["info"])
+                info = Gtk.Label(
+                    lesson["start"] + " - " + lesson["end"] + "\n" + lesson["info"])
                 info.set_xalign(0)
                 list.add(info)
                 self.show_all()
@@ -101,70 +105,84 @@ class ALISchemaWindow(Gtk.ApplicationWindow):
 
         print("Notebook changed page")
 
-        self.week_button.set_label("v."+self.week)
+        self.week_button.set_label("v." + self.week)
 
-        file = Gio.File.new_for_uri("http://jobb.matstoms.se/ali/api/getjson.php?week="+self.week+"&scid=89920&clid=na15c&getweek=0&day="+str(page+1)+"")
+        file = Gio.File.new_for_uri("http://jobb.matstoms.se/ali/api/getjson.php?week=" +
+                                    self.week + "&scid=89920&clid=na15c&getweek=0&day=" + str(page + 1) + "")
         file.load_contents_async(Gio.Cancellable(), self.callback, page)
 
     def __init__(self, app):
-        Gtk.Window.__init__(self, title="ALI-Schema", application=app)
 
-        self.week = str(datetime.datetime.today().isocalendar()[1])
+        if not os.path.exists(os.environ['HOME'] + '/.ali'):
+            os.makedirs(os.environ['HOME'] + '/.ali')
+        try:
+            f = open(os.environ['HOME'] + '/.ali/schema.ali', 'r')
+        except IOError:
+            f = open(os.environ['HOME'] + '/.ali/schema.ali', 'w')
+            f.write(json.dumps({"school": "", "class": ""}))
+            f.close()
+        finally:
+            settings = json.loads(f.read())
 
-        self.header = Gtk.HeaderBar()
-        self.header.set_show_close_button(True)
-        self.header.props.title = "ALI-Schema"
-        self.set_titlebar(self.header)
+            Gtk.Window.__init__(self, title="ALI-Schema", application=app)
 
-        self.week_button = Gtk.Button("v."+self.week)
-        self.week_button.connect("clicked", self.show_popover)
-        self.header.pack_start(self.week_button)
+            self.week = str(datetime.datetime.today().isocalendar()[1])
 
-        grid = Gtk.Grid()
+            self.header = Gtk.HeaderBar()
+            self.header.set_show_close_button(True)
+            self.header.props.title = "ALI-Schema"
+            self.set_titlebar(self.header)
 
-        self.week_adjustment = Gtk.Adjustment(int(self.week), 1, 52, 1, 10, 0)
-        self.week_adjustment.connect("value-changed", self.update_view)
+            self.week_button = Gtk.Button("v." + self.week)
+            self.week_button.connect("clicked", self.show_popover)
+            self.header.pack_start(self.week_button)
 
-        self.week_picker = Gtk.SpinButton()
-        self.week_picker.set_adjustment(self.week_adjustment)
-        self.week_picker.set_range(1, 52)
-        self.week_picker.set_value(int(self.week))
+            grid = Gtk.Grid()
 
-        self.this_week = Gtk.Button("Denna vecka")
-        self.this_week.connect("clicked", self.reset_week)
+            self.week_adjustment = Gtk.Adjustment(int(self.week), 1, 52, 1, 10, 0)
+            self.week_adjustment.connect("value-changed", self.update_view)
 
-        label = Gtk.Label("Vecka")
-        label.set_xalign(0)
+            self.week_picker = Gtk.SpinButton()
+            self.week_picker.set_adjustment(self.week_adjustment)
+            self.week_picker.set_range(1, 52)
+            self.week_picker.set_value(int(self.week))
 
-        grid.set_row_spacing(5)
-        grid.set_column_homogeneous(True)
+            self.this_week = Gtk.Button("Denna vecka")
+            self.this_week.connect("clicked", self.reset_week)
 
-        grid.attach(label, 0, 0, 1, 1)
-        grid.attach(self.week_picker, 1, 0, 1, 1)
-        grid.attach(self.this_week, 0, 2, 2, 2)
+            label = Gtk.Label("Vecka")
+            label.set_xalign(0)
 
-        self.week_popover = Gtk.Popover()
-        self.week_popover.set_position(Gtk.PositionType.BOTTOM)
-        self.week_popover.set_relative_to(self.week_button)
-        self.week_popover.set_border_width(5)
-        self.week_popover.add(grid)
+            grid.set_row_spacing(5)
+            grid.set_column_homogeneous(True)
 
-        self.notebook = Gtk.Notebook()
+            grid.attach(label, 0, 0, 1, 1)
+            grid.attach(self.week_picker, 1, 0, 1, 1)
+            grid.attach(self.this_week, 0, 2, 2, 2)
 
-        days = ["Måndag", "Tisdag", "Onsdag", "Torsdag", "Fredag"]
+            self.week_popover = Gtk.Popover()
+            self.week_popover.set_position(Gtk.PositionType.BOTTOM)
+            self.week_popover.set_relative_to(self.week_button)
+            self.week_popover.set_border_width(5)
+            self.week_popover.add(grid)
 
-        for i in range(5):
-             list = Gtk.ListBox()
-             list.set_selection_mode(Gtk.SelectionMode.NONE)
-             self.notebook.insert_page(list, Gtk.Label(days[i]), i)
+            self.notebook = Gtk.Notebook()
 
-        self.notebook.connect("switch-page", self.day_changed)
+            days = ["Måndag", "Tisdag", "Onsdag", "Torsdag", "Fredag"]
 
-        self.add(self.notebook)
+            for i in range(5):
+                list = Gtk.ListBox()
+                list.set_selection_mode(Gtk.SelectionMode.NONE)
+                self.notebook.insert_page(list, Gtk.Label(days[i]), i)
+
+                self.notebook.connect("switch-page", self.day_changed)
+
+                self.add(self.notebook)
 
     def reload(self):
+        self.day_changed(self.notebook, self.notebook.get_nth_page(
+            self.notebook.get_current_page()), self.notebook.get_current_page())
 
-        self.day_changed(self.notebook, self.notebook.get_nth_page(self.notebook.get_current_page()), self.notebook.get_current_page())
 
 class ALISchemaApplication(Gtk.Application):
 
